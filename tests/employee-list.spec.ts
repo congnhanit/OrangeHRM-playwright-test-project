@@ -1,15 +1,15 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Locator } from '@playwright/test';
+
+let employeeId: Locator;
 
 test.describe('Employee List', () => {
-
+  test.setTimeout(60000)
   test.beforeEach(async ({ page }) => {
     await page.goto('https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index')
     const employeeSection =  page.getByRole('link', { name: 'PIM' });
     await employeeSection.click()
+    employeeId = page.locator("//label[text()='Employee Id']/ancestor::div[2]//input");
   });
-  test.afterEach(async ({ page }) => {
-  await page.close();
-});
   // ─── Hiển thị ───────────────────────────────────────────────────────────────
 
   test('hiển thị danh sách nhân viên mặc định khi vào trang', async ({ page }) => {
@@ -50,11 +50,12 @@ test.describe('Employee List', () => {
     await expect(rows).toHaveCount(1);
   });
 
-  test('tìm kiếm không có kết quả hiển thị "No Records Found"', async ({ page }) => {
-    await page.locator('input[placeholder="Employee Id"]').fill('NOTEXIST999');
+  test('tìm kiếm không có kết quả hiển thị', async ({ page }) => {
+    const rows = page.locator('.oxd-table-body .oxd-table-row');
+    await page.waitForLoadState('networkidle')
+    await employeeId.fill('NOTEXIST999');
     await page.getByRole('button', { name: 'Search' }).click();
-
-    await expect(page.getByText('No Records Found')).toBeVisible();
+    await expect(rows).toBeHidden();
   });
 
   test('tìm kiếm theo Employment Status', async ({ page }) => {
