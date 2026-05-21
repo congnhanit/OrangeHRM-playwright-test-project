@@ -10,9 +10,9 @@ jobs:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     env:
+        BASE_URL: ${{ secrets.BASE_URL }} 
         TEST_USERNAME: ${{ secrets.USERNAME }}
         TEST_PASSWORD: ${{ secrets.PASSWORD }}
-        BASE_URL: ${{ secrets.BASE_URL }} 
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
@@ -30,3 +30,6 @@ jobs:
         name: playwright-report
         path: playwright-report/
         retention-days: 30
+
+
+        
