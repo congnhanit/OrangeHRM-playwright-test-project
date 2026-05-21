@@ -65,7 +65,7 @@ export default defineConfig({
       name: 'no-authen',
       use: { ...devices['Desktop Chrome'],
       },
-      testMatch: 'example.spec.ts'
+      testMatch: 'log-in.spec.ts'
     },
     
 
