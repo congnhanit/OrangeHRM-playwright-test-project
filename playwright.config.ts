@@ -19,6 +19,7 @@ const authFile = `auth/${config.getEnvironment()}.json`
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
+  timeout: 60_000,
   testDir: './tests',
   /* Run tests in files in parallel */
   // testMatch: '**/*.spec.ts',
@@ -43,7 +44,8 @@ export default defineConfig({
     launchOptions: {
     slowMo: 500, // Trì hoãn mỗi thao tác 50ms để nó "mượt" và dễ quan sát hơn
   },
-    
+  // Tự động quay video VÀO LÚC test case bị lỗi
+    video: 'retain-on-failure', 
   },
 
   /* Configure projects for major browsers */

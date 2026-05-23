@@ -1,11 +1,11 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Locator } from '@playwright/test';
 import { LoginPage } from '../pages/loginPage';
-import { EmployeePage } from '../pages/employeePage';
+import { EmployeePage } from '../pages/employeePage/employeePage.fixture';
 
 
 test.describe('Kiểm tra đăng nhập', () => {
   let loginPage: LoginPage;
-  let loginErrorAlert1, loginErrorAlert2;
+  let loginErrorAlert1: Locator, loginErrorAlert2: Locator;
 
   // HOOK: Chạy trước mỗi test case
   test.beforeEach(async ({ page }) => {
