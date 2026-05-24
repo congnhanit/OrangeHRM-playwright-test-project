@@ -1,11 +1,11 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config(); // Phải chạy dòng này đầu tiên!
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test";
 import { EnvironmentConfig } from "./environment.config";
 
 const config = EnvironmentConfig.getInstance();
 
-const authFile = `auth/${config.getEnvironment()}.json`
+const authFile = `auth/${config.getEnvironment()}.json`;
 
 /**
  * Read environment variables from file.
@@ -20,7 +20,6 @@ const authFile = `auth/${config.getEnvironment()}.json`
  */
 export default defineConfig({
   timeout: 60_000,
-  testDir: './tests',
   /* Run tests in files in parallel */
   // testMatch: '**/*.spec.ts',
 
@@ -32,7 +31,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 4 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['html', { outputFolder: 'playwright-report' }]],
+  reporter: [["html", { outputFolder: "playwright-report", open: "always" }]],
 
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -40,36 +39,30 @@ export default defineConfig({
     // baseURL: 'http://localhost:3000',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
     launchOptions: {
-    slowMo: 500, // Trì hoãn mỗi thao tác 50ms để nó "mượt" và dễ quan sát hơn
-  },
-  // Tự động quay video VÀO LÚC test case bị lỗi
-    video: 'retain-on-failure', 
+      slowMo: 500, // Trì hoãn mỗi thao tác 50ms để nó "mượt" và dễ quan sát hơn
+    },
+    // Tự động quay video VÀO LÚC test case bị lỗi
+    video: "retain-on-failure",
   },
 
   /* Configure projects for major browsers */
   projects: [
-    { name: 'setup', testMatch: /.*\.setup\.ts/ },
+    { name: "setup", testMatch: /.*\.setup\.ts/ },
 
     {
-      name: 'authen',
-      use: { ...devices['Desktop Chrome'], 
-        storageState: authFile,
-        
-      },
-      dependencies: ['setup'],
-      testIgnore: 'example.spec.ts',
+      name: "authen",
+      use: { ...devices["Desktop Chrome"], storageState: authFile },
+      dependencies: ["setup"],
+      testDir: "./tests/auth",
       fullyParallel: true,
-
     },
     {
-      name: 'no-authen',
-      use: { ...devices['Desktop Chrome'],
-      },
-      testMatch: 'log-in.spec.ts'
+      name: "no-authen",
+      use: { ...devices["Desktop Chrome"] },
+      testDir: "./tests/no-auth",
     },
-    
 
     // {
     //   name: 'firefox',
