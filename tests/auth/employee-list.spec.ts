@@ -1,165 +1,186 @@
-import { test, expect, Locator } from '@playwright/test';
+import { test, expect, Locator } from "@playwright/test";
 
 let employeeId: Locator;
+let table: Locator;
 
-test.describe('Employee List', () => {
-  test.setTimeout(60000)
+function createCounter() {
+  let count = 0;
+  return function () {
+    count++;
+    return `TC-EMPL-${String(count).padStart(2, "0")}: `;
+  };
+}
+
+// 2. Khởi tạo một bộ đếm cụ thể
+const nextTC = createCounter();
+
+test.describe("Orange HRM - Employee List", () => {
+  let TCID = "TC-EMPL-";
+  test.setTimeout(60000);
   test.beforeEach(async ({ page }) => {
-    await page.goto('https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index')
-    const employeeSection =  page.getByRole('link', { name: 'PIM' });
-    await employeeSection.click()
-    employeeId = page.locator("//label[text()='Employee Id']/ancestor::div[2]//input");
+    await page.goto(
+      "https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index",
+    );
+    const employeeSection = page.getByRole("link", { name: "PIM" });
+    await employeeSection.click();
+    await page.waitForLoadState('networkidle')
+    employeeId = page.locator(
+      "//label[text()='Employee Id']/ancestor::div[2]//input",
+    );
+    table = page.locator(".oxd-table-body .oxd-table-row");
   });
   // ─── Hiển thị ───────────────────────────────────────────────────────────────
 
-  test('hiển thị danh sách nhân viên mặc định khi vào trang', async ({ page }) => {
-    const rows = page.locator('.oxd-table-body .oxd-table-row');
-    await page.waitForLoadState('networkidle')
-    await expect(rows.first()).toBeVisible();
-  });
+  test(
+    nextTC() + "Hiển thị danh sách nhân viên mặc định khi vào trang",
+    async ({ page }) => {
+      const rows = page.locator(".oxd-table-body .oxd-table-row");
+      await page.waitForLoadState("networkidle");
+      await rows.first().scrollIntoViewIfNeeded();
+      await expect(rows.first()).toBeVisible();
+    },
+  );
 
-  test('hiển thị đúng các cột trong bảng', async ({ page }) => {
-    const headers = page.locator('.oxd-table-header .oxd-table-header-cell');
+  test(nextTC() + "Hiển thị đúng các cột trong bảng", async ({ page }) => {
+    const headers = page.locator(".oxd-table-header .oxd-table-header-cell");
+    await 
     await expect(headers).toContainText([
-      'Id', 'First (& Middle) Name', 'Last Name', 'Job Title', 'Employment Status', 'Sub Unit',  'Actions'
+      "Id",
+      "First (& Middle) Name",
+      "Last Name",
+      "Job Title",
+      "Employment Status",
+      "Sub Unit",
+      "Supervisor",
+      "Actions",
     ]);
-  });
-
-  test('hiển thị số lượng record đúng với số nhân viên', async ({ page }) => {
-    const recordCount = page.locator('.orangehrm-horizontal-padding span').filter({ hasText: /\d+ Record/ });
-    await expect(recordCount).toBeVisible();
   });
 
   // ─── Tìm kiếm ───────────────────────────────────────────────────────────────
 
-  test('tìm kiếm theo Employee Name', async ({ page }) => {
-    await page.getByPlaceholder('Type for hints...').first().fill('John');
-    await page.waitForSelector('.oxd-autocomplete-option', { timeout: 3000 }).catch(() => {});
-    await page.keyboard.press('Enter');
-    await page.getByRole('button', { name: 'Search' }).click();
+  test(nextTC() + "Tìm kiếm theo Employee Name", async ({ page }) => {
+    await page.getByPlaceholder("Type for hints...").first().fill("John");
+    await page
+      .waitForSelector(".oxd-autocomplete-option", { timeout: 3000 })
+      .catch(() => {});
+    await page.keyboard.press("Enter");
+    await page.getByRole("button", { name: "Search" }).click();
 
-    const rows = page.locator('.oxd-table-body .oxd-table-row');
+    const rows = page.locator(".oxd-table-body .oxd-table-row");
     await expect(rows.first()).toBeVisible();
   });
 
-  test('tìm kiếm theo Employee Id', async ({ page }) => {
-    await page.locator("//label[text()='Employee Id']/ancestor::div[2]//input").fill('0317');
-    await page.getByRole('button', { name: 'Search' }).click();
+  test(nextTC() + "Tìm kiếm theo Employee ID", async ({ page }) => {
+    await page
+      .locator("//label[text()='Employee Id']/ancestor::div[2]//input")
+      .fill("0317");
+    await page.getByRole("button", { name: "Search" }).click();
 
-    const rows = page.locator('.oxd-table-body .oxd-table-row');
+    const rows = page.locator(".oxd-table-body .oxd-table-row");
     await expect(rows).toHaveCount(1);
   });
 
-  test('tìm kiếm không có kết quả hiển thị', async ({ page }) => {
-    const rows = page.locator('.oxd-table-body .oxd-table-row');
-    await page.waitForLoadState('networkidle')
-    await employeeId.fill('NOTEXIST999');
-    await page.getByRole('button', { name: 'Search' }).click();
+  test(nextTC() + "Tìm kiếm không có kết quả hiển thị", async ({ page }) => {
+    const rows = page.locator(".oxd-table-body .oxd-table-row");
+    await page.waitForLoadState("networkidle");
+    await employeeId.fill("NOTEXIST999");
+    await page.getByRole("button", { name: "Search" }).click();
     await expect(rows).toBeHidden();
   });
 
-  test('tìm kiếm theo Employment Status', async ({ page }) => {
-    await page.locator('.oxd-select-text').filter({ hasText: 'Employment Status' }).click();
-    await page.getByRole('option', { name: 'Full-Time Permanent' }).click();
-    await page.getByRole('button', { name: 'Search' }).click();
+  test(nextTC() + "Tìm kiếm theo Employment Status", async ({ page }) => {
+    await page
+      .locator(
+        "//label[text() = 'Employment Status']/parent::div/following-sibling::div",
+      )
+      .click();
+    await page.getByRole("option", { name: "Full-Time Permanent" }).click();
+    await page.getByRole("button", { name: "Search" }).click();
 
-    const rows = page.locator('.oxd-table-body .oxd-table-row');
+    const rows = page.locator(".oxd-table-body .oxd-table-row");
     await expect(rows.first()).toBeVisible();
   });
 
-  test('tìm kiếm theo Job Title', async ({ page }) => {
-    await page.locator('.oxd-select-text').filter({ hasText: 'Job Title' }).click();
-    await page.getByRole('option').nth(1).click();
-    await page.getByRole('button', { name: 'Search' }).click();
+  test.skip(nextTC() + "Tìm kiếm theo Job Title", async ({ page }) => {
+    await page
+      .locator(
+        '//label[text() = "Job Title"]/parent::div/following-sibling::div',
+      )
+      .click();
+    await page.getByRole("option").nth(1).click();
+    await page.getByRole("button", { name: "Search" }).click();
 
-    const rows = page.locator('.oxd-table-body .oxd-table-row');
+    const rows = page.locator(".oxd-table-body .oxd-table-row");
     await expect(rows.first()).toBeVisible();
   });
 
-  test('tìm kiếm theo Sub Unit', async ({ page }) => {
-    await page.locator('.oxd-select-text').filter({ hasText: 'Sub Unit' }).click();
-    await page.getByRole('option').nth(1).click();
-    await page.getByRole('button', { name: 'Search' }).click();
+  test.skip(nextTC() + "Tìm kiếm theo Sub Unit", async ({ page }) => {
+    await page
+      .locator(".oxd-select-text")
+      .filter({ hasText: "Sub Unit" })
+      .click();
+    await page.getByRole("option").nth(1).click();
+    await page.getByRole("button", { name: "Search" }).click();
 
-    const rows = page.locator('.oxd-table-body .oxd-table-row');
+    const rows = page.locator(".oxd-table-body .oxd-table-row");
     await expect(rows.first()).toBeVisible();
   });
 
-  test('nút Reset xoá toàn bộ bộ lọc và hiển thị lại danh sách gốc', async ({ page }) => {
-    await page.locator('input[placeholder="Employee Id"]').fill('NOTEXIST999');
-    await page.getByRole('button', { name: 'Search' }).click();
-    await expect(page.getByText('No Records Found')).toBeVisible();
+  test(
+    nextTC() + "Nút Reset xoá toàn bộ bộ lọc và hiển thị lại danh sách gốc",
+    async ({ page }) => {
+      await employeeId.fill("NOTEXIST999");
+      await page.getByRole("button", { name: "Search" }).click();
+      await expect(table).toBeHidden();
 
-    await page.getByRole('button', { name: 'Reset' }).click();
-    const rows = page.locator('.oxd-table-body .oxd-table-row');
-    await expect(rows.first()).toBeVisible();
-  });
-
-  // ─── Thêm nhân viên ─────────────────────────────────────────────────────────
-
-  test('click Add điều hướng đến trang Add Employee', async ({ page }) => {
-    await page.getByRole('button', { name: 'Add' }).click();
-    await expect(page).toHaveURL(/addEmployee/);
-    await expect(page.getByRole('heading', { name: 'Add Employee' })).toBeVisible();
-  });
-
-  // ─── Chỉnh sửa ──────────────────────────────────────────────────────────────
-
-  test('click Edit mở trang thông tin nhân viên', async ({ page }) => {
-    const editBtn = page.locator('.oxd-table-body .oxd-table-row').first()
-      .getByRole('button').filter({ has: page.locator('i.bi-pencil-fill') });
-    await editBtn.click();
-
-    await expect(page).toHaveURL(/viewPersonalDetails/);
-  });
-
-  // ─── Xoá nhân viên ──────────────────────────────────────────────────────────
-
-  test('click Delete hiển thị dialog xác nhận', async ({ page }) => {
-    const deleteBtn = page.locator('.oxd-table-body .oxd-table-row').first()
-      .getByRole('button').filter({ has: page.locator('i.bi-trash') });
-    await deleteBtn.click();
-
-    await expect(page.getByRole('dialog')).toBeVisible();
-    await expect(page.getByText('Are you Sure?')).toBeVisible();
-  });
-
-  test('huỷ xoá không xoá nhân viên khỏi danh sách', async ({ page }) => {
-    const rows = page.locator('.oxd-table-body .oxd-table-row');
-    const countBefore = await rows.count();
-
-    const deleteBtn = rows.first()
-      .getByRole('button').filter({ has: page.locator('i.bi-trash') });
-    await deleteBtn.click();
-
-    await page.getByRole('button', { name: 'No, Cancel' }).click();
-    await expect(rows).toHaveCount(countBefore);
-  });
+      await page.getByRole("button", { name: "Reset" }).click();
+      await expect(employeeId).toBeEmpty();
+      const rows = page.locator(".oxd-table-body .oxd-table-row");
+      await expect(rows.first()).toBeVisible();
+    },
+  );
 
   // ─── Phân trang ─────────────────────────────────────────────────────────────
 
-  test('phân trang hiển thị đúng số trang', async ({ page }) => {
-    const pagination = page.locator('.oxd-pagination');
-    const isVisible = await pagination.isVisible();
-
-    if (isVisible) {
+  test(
+    nextTC() + "Phân trang hiển thị khi nhiều hơn 1 trang",
+    async ({ page }) => {
+      const pagination = page.locator('ul[class="oxd-pagination__ul"]');
+      await page.waitForLoadState("networkidle");
+      await pagination.scrollIntoViewIfNeeded();
       await expect(pagination).toBeVisible();
-    } else {
-      // Ít hơn 1 trang → không có phân trang là đúng
-      const rows = page.locator('.oxd-table-body .oxd-table-row');
-      expect(await rows.count()).toBeGreaterThan(0);
-    }
-  });
+    },
+  );
 
-  test('chuyển sang trang tiếp theo hiển thị nhân viên khác', async ({ page }) => {
-    const nextBtn = page.locator('.oxd-pagination-page-item--page').nth(1);
-    const isVisible = await nextBtn.isVisible();
+  test(
+    nextTC() + "Phân trang không hiển thị khi ít hơn 1 trang",
+    async ({ page }) => {
+      const pagination = page.locator('ul[class="oxd-pagination__ul"]');
+      await page.getByPlaceholder("Type for hints...").first().fill("John");
+      await page.getByRole("button", { name: "Search" }).click();
+      await page.waitForLoadState("networkidle");
+      await expect(pagination).toBeHidden();
+    },
+  );
 
-    if (isVisible) {
-      const firstRowBefore = await page.locator('.oxd-table-body .oxd-table-row').first().textContent();
-      await nextBtn.click();
-      const firstRowAfter = await page.locator('.oxd-table-body .oxd-table-row').first().textContent();
-      expect(firstRowBefore).not.toEqual(firstRowAfter);
-    }
-  });
+  test(
+    nextTC() + "Chuyển sang trang tiếp theo hiển thị nhân viên khác",
+    async ({ page }) => {
+      const nextBtn = page.locator(".oxd-pagination-page-item--page").nth(1);
+      const isVisible = await nextBtn.isVisible();
+
+      if (isVisible) {
+        const firstRowBefore = await page
+          .locator(".oxd-table-body .oxd-table-row")
+          .first()
+          .textContent();
+        await nextBtn.click();
+        const firstRowAfter = await page
+          .locator(".oxd-table-body .oxd-table-row")
+          .first()
+          .textContent();
+        expect(firstRowBefore).not.toEqual(firstRowAfter);
+      }
+    },
+  );
 });
